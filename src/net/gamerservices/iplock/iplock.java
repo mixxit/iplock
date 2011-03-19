@@ -23,6 +23,7 @@ import java.util.logging.Level;
 
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -32,6 +33,7 @@ import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
+
 import java.io.File;
 import java.net.UnknownHostException;
 
@@ -99,7 +101,7 @@ public class iplock extends JavaPlugin {
 				prop.setProperty(PROP_SPECHAR, "false");
 				
 				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(propfile.getAbsolutePath()));
-				prop.store(stream, "Default generated settings, please ensure mysqld matches");
+				prop.store(stream, "Default generated settings - change max-char to 0 to disable. Changing spe-char to true will force checks for special characters");
 				System.out.println("npcx : properties file generation ended");
 				
 			} catch(IOException e)
@@ -191,6 +193,71 @@ public class iplock extends JavaPlugin {
         System.out.println( pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!" );
         loadIPLockUsers();
         
+    }
+    
+    
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
+        try {
+        	    
+            if (!command.getName().toLowerCase().equals("iplock")) {
+            	
+                return false;
+            }
+            if (!(sender instanceof Player)) {
+
+            	// Other source such as console
+            	if (args.length < 1) {
+					System.out.print("incorrect syntax - try iplock refresh");
+	            	
+	                return false;
+	            }
+            	String subCommand = args[0].toLowerCase();
+				
+            	
+            	if (subCommand.equals("refresh"))
+                {
+            		System.out.print("iplock : forceful reload of cache");
+            		loadIPLockUsers();
+                }
+                return false;
+            } else {
+
+	            if (!sender.isOp())
+	            {
+	            	return false;
+	            }
+	     
+	            
+	
+	            
+	            Player player = (Player) sender;
+	            Location l = player.getLocation();
+				if (args.length < 1) {
+	            	
+	            	player.sendMessage("incorrect syntax - try /iplock refresh");
+	                return false;
+	            }
+				
+				String subCommand = args[0].toLowerCase();
+	            // From a player
+	            
+	            if (subCommand.equals("refresh"))
+	            {
+	        		System.out.print("iplock : forceful reload of cache");
+	        		player.sendMessage("forcefully reloading cache");
+	        		loadIPLockUsers();
+	            	
+	            }
+            }
+        
+        } catch (Exception e) {
+            sender.sendMessage("iplock : an oncommand error occured.");
+            e.printStackTrace();
+            return true;
+        }
+
+        return true;
     }
     
     public boolean isUser(String name)
@@ -347,7 +414,7 @@ public class iplock extends JavaPlugin {
     			line = reader.readLine();
     			count++;
     		}
-    		System.out.print("iplock : cached " + count + "users");
+    		System.out.print("iplock : cached " + count + " users");
     		
     		reader.close();
     		

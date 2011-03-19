@@ -43,7 +43,7 @@ public class PListener extends PlayerListener {
 		    	if (!name.matches("[A-Za-z0-9]+"))
 		    	{
 		            System.out.println("iplock - kicked (" + player + "), special characters in name");
-		    		event.disallow(Result.KICK_OTHER,"You cannot connect with special characters");
+		    		event.disallow(Result.KICK_OTHER,"DENIED: Special characters in your name");
 		    		return;
 		    	}
 	    	}
@@ -51,8 +51,8 @@ public class PListener extends PlayerListener {
 	    	{
 		    	if (name.length() > Integer.parseInt(plugin.maxchar))
 		    	{
-		            System.out.println("iplock - kicked (" + player + "), name not less than 15 characters");
-		    		event.disallow(Result.KICK_OTHER,"Player names must be less than 15 characters.");
+		            System.out.println("iplock - kicked (" + player + "), name not less than " + (Integer.parseInt(plugin.maxchar) + 1) + " characters");
+		    		event.disallow(Result.KICK_OTHER,"DENIED: Player names must be less than " + (Integer.parseInt(plugin.maxchar) + 1) + " characters on this server");
 		
 		    		
 		    	}
@@ -82,7 +82,7 @@ public class PListener extends PlayerListener {
 	    	if (!plugin.isValid(user))
 	    	{
 		          System.out.println("iplock - kicked (" + name + "), ip (" + event.getPlayer().getAddress().getHostName().toString() + ") not in same subnet");
-		          event.getPlayer().kickPlayer("You are trying to login to an account from the wrong IP");
+		          event.getPlayer().kickPlayer("DENIED: Are you trying to login from somewhere different than normal?");
 		          return;
 	    	  
 	    	}

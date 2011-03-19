@@ -14,7 +14,7 @@ public class savetask extends TimerTask {
 		// TODO Auto-generated method stub
 		if (this.parent != null)
 		{
-			System.out.print("iplock : saving");
+			// System.out.print("DEBUG iplock : saving");
 			this.parent.saveIPLockUsers();
 		}
 	}
