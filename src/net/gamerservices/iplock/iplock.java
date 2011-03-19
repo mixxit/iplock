@@ -1,5 +1,6 @@
 package net.gamerservices.iplock;
 
+import java.sql.DriverManager;
 import java.util.Timer;
 
 import java.util.HashMap;
@@ -9,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -17,11 +19,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.Timer;
+import java.util.logging.Level;
+
+
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
+import org.bukkit.event.Event.Type;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -38,7 +44,9 @@ public class iplock extends JavaPlugin {
     private final PListener playerListener = new PListener(this);
     private final BListener blockListener = new BListener(this);
     private final HashMap<Player, Boolean> debugees = new HashMap<Player, Boolean>();
-    
+    private final String FILE_PROPERTIES = "iplock.properties";
+	private final String PROP_MAXCHAR = "max-char";
+	private final String PROP_SPECHAR = "spe-char";
    
     // NOTE: There should be no need to define a constructor any more for more info on moving from
     // the old constructor see:
@@ -47,6 +55,12 @@ public class iplock extends JavaPlugin {
     private final String FILE_IPLOCKUSERS = "iplock.users";
     private ArrayList<String> iplockUsersList = new ArrayList<String>();
     private File configFolder;
+    
+    private File propfile;
+	private File propfolder;
+
+	public String maxchar;
+	public String spechar;
     
     public void onDisable() {
         // TODO: Place any custom disable code here
@@ -57,8 +71,82 @@ public class iplock extends JavaPlugin {
         System.out.println("iplock ended");
     }
 
-    
-    
+    public void onLoad() {
+    	    	
+    	// TODO Auto-generated method stub
+		propfolder = getDataFolder();
+		if (!propfolder.exists())
+		{
+			try
+			{
+				propfolder.mkdir();
+				System.out.println("npcx : config folder generation ended");
+			} catch (Exception e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		propfile = new File(propfolder.getAbsolutePath() + File.separator + FILE_PROPERTIES);
+		if (!propfile.exists())
+		{
+			try
+			{
+				propfile.createNewFile();
+				Properties prop = new Properties();
+				prop.setProperty(PROP_MAXCHAR, "0");
+				prop.setProperty(PROP_SPECHAR, "false");
+				
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(propfile.getAbsolutePath()));
+				prop.store(stream, "Default generated settings, please ensure mysqld matches");
+				System.out.println("npcx : properties file generation ended");
+				
+			} catch(IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+					
+			loadSettings();
+			System.out.println("npcx : initial setup ended");
+		
+		}
+			
+		loadSettings();
+		
+	}
+	
+	public void loadSettings()
+	{
+		// Loads configuration settings from the properties files
+		System.out.println("npcx : load settings begun");
+		
+		Properties config = new Properties();
+		BufferedInputStream stream;
+		// Access the defined properties file
+		try {
+			stream = new BufferedInputStream(new FileInputStream(propfolder.getAbsolutePath() + File.separator + FILE_PROPERTIES));
+			
+			try {
+				
+				// Load the configuration
+				config.load(stream);
+				maxchar = config.getProperty("max-char");
+				spechar = config.getProperty("spe-char");
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("npcx : loadsettings() ended");
+	}
+	
     
     public void onEnable() {
         // TODO: Place any custom enable code here including the registration of any events
@@ -166,7 +254,7 @@ public class iplock extends JavaPlugin {
     		if (!isIPOnList(ip) && !isNameOnList(pname))
     		{
 	    		// create user
-				System.out.print("iplock : allowing " + name.split("=")[1] + " because they are new!");
+				System.out.print("iplock : allowing " + ip + " (" + pname + ") because they are new!");
 
 	    		createUser(name);
 	    		
@@ -185,7 +273,7 @@ public class iplock extends JavaPlugin {
     		{
     			if (player.split("=")[1].equalsIgnoreCase(pname))
     			{
-    				System.out.print("iplock : allowing " + name.split("=")[1] + " because their ip matches");
+    				System.out.print("iplock : allowing " + pip + " (" + pname + ") because their ip matches");
     				return true;
     			}
     		}
@@ -214,7 +302,7 @@ public class iplock extends JavaPlugin {
 		    			String currentip = inetAdd.getHostAddress();
 		    			if (currentip.split("\\.")[0].equalsIgnoreCase(ippart1) && currentip.split("\\.")[1].equalsIgnoreCase(ippart2))
 		    			{
-		    				 System.out.print("iplock : ALLOWED " + name.split("=")[1] + " because they are on same subnet");
+		    				 System.out.print("iplock : ALLOWED " + name.split("=")[0] + " (" + name.split("=")[1] + ") because they are on same subnet");
 		    				 return true;
 		    			}
 						
@@ -231,7 +319,7 @@ public class iplock extends JavaPlugin {
 			e1.printStackTrace();
 		}
     	
-		 System.out.print("iplock : DENIED " + name.split("=")[1] + " because they are on the list but not on the same subnet");    	
+		 System.out.print("iplock : DENIED " + name.split("=")[0] + " this is NOT " + name.split("=")[1]);    	
     	return false;
     	
     }
@@ -252,13 +340,15 @@ public class iplock extends JavaPlugin {
     		iplockUsersList.clear();
     		BufferedReader reader = new BufferedReader(new FileReader((configFolder.getAbsolutePath() + File.separator + FILE_IPLOCKUSERS)));
     		String line = reader.readLine();
-    		
+    		int count = 0;
     		while (line != null)
     		{
     			iplockUsersList.add(line);
     			line = reader.readLine();
-    			
+    			count++;
     		}
+    		System.out.print("iplock : cached " + count + "users");
+    		
     		reader.close();
     		
     	} catch (Exception e)

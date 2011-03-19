@@ -1,0 +1,9 @@
+name: iplock
+main: net.gamerservices.iplock.iplock
+version: 0.024
+author: mixxit
+website: http://www.gamerservices.net
+description: >
+    prevents users from logging in from multiple ip addresses (two boxing prevention)
+commands:
+   

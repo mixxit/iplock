@@ -31,31 +31,37 @@ public class PListener extends PlayerListener {
     	System.out.println("debug: " + event.getPlayer().getName());
     	try
     	{
-    	Player player = event.getPlayer();
-    	String name = player.getName();
-    	//System.out.println("debug: " + event.getPlayer().getAddress().getHostName().toString());
-    	
-    	// Special Characters Addon
-    	
-    	if (!name.matches("[A-Za-z0-9]+"))
-    	{
-            System.out.println("iplock - kicked, special characters in name");
-    		event.disallow(Result.KICK_OTHER,"You cannot connect with special characters");
-    		return;
-    	}
-    	
-    	if (name.length() > 15)
-    	{
-            System.out.println("iplock - kicked, name not less than 15 characters");
-    		event.disallow(Result.KICK_OTHER,"Player names must be less than 15 characters.");
-
-    		
-    	}
+	    	Player player = event.getPlayer();
+	    	String name = player.getName();
+	    	//System.out.println("debug: " + event.getPlayer().getAddress().getHostName().toString());
+	    	
+	    	// Special Characters Addon
+	    	
+	    	if (plugin.spechar.equals("true"))
+	    	{
+	    	
+		    	if (!name.matches("[A-Za-z0-9]+"))
+		    	{
+		            System.out.println("iplock - kicked (" + player + "), special characters in name");
+		    		event.disallow(Result.KICK_OTHER,"You cannot connect with special characters");
+		    		return;
+		    	}
+	    	}
+	    	if (Integer.parseInt(plugin.maxchar) > 0)
+	    	{
+		    	if (name.length() > Integer.parseInt(plugin.maxchar))
+		    	{
+		            System.out.println("iplock - kicked (" + player + "), name not less than 15 characters");
+		    		event.disallow(Result.KICK_OTHER,"Player names must be less than 15 characters.");
+		
+		    		
+		    	}
+		    	
+	    	}
     	} catch (Exception e) 
     	{
-    		System.out.println("iplock - exception running name checks");
+    		System.out.println("iplock - exception running name checks for " + event.getPlayer().getName());
     	}
-
     }
     
     
@@ -75,7 +81,7 @@ public class PListener extends PlayerListener {
 	    	
 	    	if (!plugin.isValid(user))
 	    	{
-		          System.out.println("iplock - kicked, ip not in same subnet");
+		          System.out.println("iplock - kicked (" + name + "), ip (" + event.getPlayer().getAddress().getHostName().toString() + ") not in same subnet");
 		          event.getPlayer().kickPlayer("You are trying to login to an account from the wrong IP");
 		          return;
 	    	  
@@ -83,7 +89,7 @@ public class PListener extends PlayerListener {
 	    	
     	} catch (Exception e)
     	{
-    		System.out.println("iplock - exception removing player: ");
+    		System.out.println("iplock - exception removing player: " + event.getPlayer().getName());
     		e.printStackTrace();
             
     	}
