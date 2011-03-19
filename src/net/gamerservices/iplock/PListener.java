@@ -81,9 +81,16 @@ public class PListener extends PlayerListener {
 	    	
 	    	if (!plugin.isValid(user))
 	    	{
-		          System.out.println("iplock - kicked (" + name + "), ip (" + event.getPlayer().getAddress().getHostName().toString() + ") not in same subnet");
-		          event.getPlayer().kickPlayer("DENIED: Are you trying to login from somewhere different than normal?");
-		          return;
+	    		  if (plugin.subnet.equals("true"))
+	    		  {
+			          System.out.println("iplock - kicked (" + name + "), ip (" + event.getPlayer().getAddress().getHostName().toString() + ") not in same subnet");
+	    		  } else {
+	    			  System.out.println("iplock - kicked (" + name + "), ip (" + event.getPlayer().getAddress().getHostName().toString() + ") not on their normal IP");
+	    		  }
+	    		  
+			      event.getPlayer().kickPlayer("DENIED: Are you trying to login from somewhere different than normal?");
+			      return;
+	    		  
 	    	  
 	    	}
 	    	

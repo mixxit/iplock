@@ -49,6 +49,8 @@ public class iplock extends JavaPlugin {
     private final String FILE_PROPERTIES = "iplock.properties";
 	private final String PROP_MAXCHAR = "max-char";
 	private final String PROP_SPECHAR = "spe-char";
+	private final String PROP_SUBNET = "subnet";
+	
    
     // NOTE: There should be no need to define a constructor any more for more info on moving from
     // the old constructor see:
@@ -63,6 +65,7 @@ public class iplock extends JavaPlugin {
 
 	public String maxchar;
 	public String spechar;
+	public String subnet;
     
     public void onDisable() {
         // TODO: Place any custom disable code here
@@ -82,7 +85,7 @@ public class iplock extends JavaPlugin {
 			try
 			{
 				propfolder.mkdir();
-				System.out.println("npcx : config folder generation ended");
+				System.out.println("iplock : config folder generation ended");
 			} catch (Exception e)
 			{
 				// TODO Auto-generated catch block
@@ -99,9 +102,10 @@ public class iplock extends JavaPlugin {
 				Properties prop = new Properties();
 				prop.setProperty(PROP_MAXCHAR, "0");
 				prop.setProperty(PROP_SPECHAR, "false");
+				prop.setProperty(PROP_SUBNET, "false");
 				
 				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(propfile.getAbsolutePath()));
-				prop.store(stream, "Default generated settings - change max-char to 0 to disable. Changing spe-char to true will force checks for special characters");
+				prop.store(stream, "Default generated settings - Change subnet to true to allow players to login from anywhere in their class C subnet. Change max-char to 0 to disable. Changing spe-char to true will force checks for special characters");
 				System.out.println("npcx : properties file generation ended");
 				
 			} catch(IOException e)
@@ -136,6 +140,7 @@ public class iplock extends JavaPlugin {
 				config.load(stream);
 				maxchar = config.getProperty("max-char");
 				spechar = config.getProperty("spe-char");
+				subnet = config.getProperty("subnet");
 				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -218,6 +223,7 @@ public class iplock extends JavaPlugin {
             	if (subCommand.equals("refresh"))
                 {
             		System.out.print("iplock : forceful reload of cache");
+            		
             		loadIPLockUsers();
                 }
                 return false;
@@ -346,45 +352,50 @@ public class iplock extends JavaPlugin {
     		}
         }
     	
-    	// Look at the list and see if we can find a player on the same subnet
-    	java.net.InetAddress inetAddthem;
-    	try {
-			inetAddthem = java.net.InetAddress.getByName(name.split("=")[0]);
-			String theirip = inetAddthem.getHostAddress();
-			System.out.println ("IP Address is : " + theirip);
-	    	String ippart1 = theirip.split("\\.")[0];
-	    	String ippart2 = theirip.split("\\.")[1];
+    	// check they have enabled subnet checking
+    	
+    	if (subnet.equals("true"))
+    	{
+	    	// Look at the list and see if we can find a player on the same subnet
+	    	java.net.InetAddress inetAddthem;
+	    	try {
+				inetAddthem = java.net.InetAddress.getByName(name.split("=")[0]);
+				String theirip = inetAddthem.getHostAddress();
+				
+		    	String ippart1 = theirip.split("\\.")[0];
+		    	String ippart2 = theirip.split("\\.")[1];
+			
+	    	
+	    	
+		    	for (String player : iplockUsersList)
+		        {
+		    		if (player.split("=")[1].equalsIgnoreCase(pname))
+		    		{
+		    			java.net.InetAddress inetAdd;
+						try {
+							inetAdd = java.net.InetAddress.getByName(player.split("=")[0]);
+							
 		
-    	
-    	
-	    	for (String player : iplockUsersList)
-	        {
-	    		if (player.split("=")[1].equalsIgnoreCase(pname))
-	    		{
-	    			java.net.InetAddress inetAdd;
-					try {
-						inetAdd = java.net.InetAddress.getByName(player.split("=")[0]);
-						System.out.println ("IP Address is : " + inetAdd.getHostAddress());
-	
-		    			String currentip = inetAdd.getHostAddress();
-		    			if (currentip.split("\\.")[0].equalsIgnoreCase(ippart1) && currentip.split("\\.")[1].equalsIgnoreCase(ippart2))
-		    			{
-		    				 System.out.print("iplock : ALLOWED " + name.split("=")[0] + " (" + name.split("=")[1] + ") because they are on same subnet");
-		    				 return true;
-		    			}
-						
-					} catch (UnknownHostException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-	    			
-	    		}
-	        }
-    	
-    	} catch (UnknownHostException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+			    			String currentip = inetAdd.getHostAddress();
+			    			if (currentip.split("\\.")[0].equalsIgnoreCase(ippart1) && currentip.split("\\.")[1].equalsIgnoreCase(ippart2))
+			    			{
+			    				 System.out.print("iplock : ALLOWED " + name.split("=")[0] + " (" + name.split("=")[1] + ") because they are on same subnet");
+			    				 return true;
+			    			}
+							
+						} catch (UnknownHostException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+		    			
+		    		}
+		        }
+	    	
+	    	} catch (UnknownHostException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+    	}
     	
 		 System.out.print("iplock : DENIED " + name.split("=")[0] + " this is NOT " + name.split("=")[1]);    	
     	return false;
