@@ -115,7 +115,7 @@ public class iplock extends JavaPlugin {
 			}
 					
 			loadSettings();
-			System.out.println("npcx : initial setup ended");
+			System.out.println("iplock : initial setup ended");
 		
 		}
 			
@@ -126,7 +126,7 @@ public class iplock extends JavaPlugin {
 	public void loadSettings()
 	{
 		// Loads configuration settings from the properties files
-		System.out.println("npcx : load settings begun");
+		System.out.println("iplock : load settings begun");
 		
 		Properties config = new Properties();
 		BufferedInputStream stream;
